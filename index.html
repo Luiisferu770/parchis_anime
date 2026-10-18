@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Parqués Anime</title>
-<!-- ICONO DE LA PESTAÑA: guarda tu PNG como img/favicon.png (cuadrado, ej. 128x128). Si no existe, se usa un dado 🎲 -->
-<link id="fav" rel="icon" href="img/favicon.png">
+<!-- ICONO DE LA PESTAÑA: guarda tu PNG como favicon.png (en la carpeta de imágenes) (cuadrado, ej. 128x128). Si no existe, se usa un dado 🎲 -->
+<link id="fav" rel="icon" href="data:,">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#1b1030;color:#fff;font-family:system-ui,Arial,sans-serif}
 #app{display:flex;gap:14px;height:100vh;padding:10px}#bd{flex:1;min-width:0;position:relative}#bd svg{width:100%;height:100%}
@@ -552,13 +552,14 @@ if(typeof module!=='undefined')module.exports={newGame,roll,legal,legalD,apply,s
 const $=s=>document.querySelector(s),NSV='http://www.w3.org/2000/svg';
 const svg=$('#tab'),CX=D.center[0],CY=D.center[1];
 const el=(n,a,p)=>{const e=document.createElementNS(NSV,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+const IMG=''; /* carpeta de las imágenes: 'img/' si usas carpeta, '' si están junto al index.html */
 let g=null,busy=false,OK=new Set();
 const SL=[[-34,-31],[34,-31],[-34,33],[34,33]];
 const rgb=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
 const mix=(a,b,t)=>{const A=rgb(a),B=rgb(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('');};
 /* iconos de fichas: img/icono_<casa>.png (uno por casa) o img/icono_<casa>_<1-4>.png (uno por ficha) */
 const URLS=D.houses.flatMap(h=>['icono_'+h.key,...[1,2,3,4].map(n=>'icono_'+h.key+'_'+n)]);
-const chk=u=>new Promise(r=>{const i=new Image();i.onload=()=>{OK.add(u);r()};i.onerror=r;i.src=u+'.png';});
+const chk=u=>new Promise(r=>{const i=new Image();i.onload=()=>{OK.add(u);r()};i.onerror=r;i.src=IMG+u+'.png';});
 const icon=p=>{const a='icono_'+D.houses[p.hi].key+'_'+p.n,b='icono_'+D.houses[p.hi].key;return OK.has(a)?{u:a,own:1}:OK.has(b)?{u:b,own:0}:null;};
 
 function prep(){
@@ -610,7 +611,7 @@ function token(parent,p,x,y,r,mv){
   el('circle',{cx:x,cy:y,r:ri,fill:'url(#gb'+p.hi+')',stroke:'#00000055','stroke-width':1.2},e); // interior de color
   el('circle',{cx:x,cy:y,r:ri-1,fill:'url(#tex)','pointer-events':'none'},e);          // textura
   el('ellipse',{cx:x-ri*.3,cy:y-ri*.5,rx:ri*.5,ry:ri*.2,fill:'#fff','fill-opacity':.25,transform:'rotate(-25 '+x+' '+y+')','pointer-events':'none'},e); // brillo
-  if(ic){const s=ri*2.1;el('image',{href:'img/'+ic.u+'.png',x:x-s/2,y:y-s/2-ri*.08,width:s,height:s,filter:'url(#fIcon)','pointer-events':'none',preserveAspectRatio:'xMidYMid meet'},e);}
+  if(ic){const s=ri*2.1;el('image',{href:IMG+ic.u+'.png',x:x-s/2,y:y-s/2-ri*.08,width:s,height:s,filter:'url(#fIcon)','pointer-events':'none',preserveAspectRatio:'xMidYMid meet'},e);}
   else el('text',{x,y:y+ri*.38,'text-anchor':'middle','font-size':ri*1.15,'font-weight':800,fill:'#fff',stroke:'#000','stroke-width':3,'paint-order':'stroke','pointer-events':'none'},e).textContent=p.n;
   if(ic&&!ic.own){el('circle',{cx:x+r*.66,cy:y+r*.66,r:r*.3,fill:'#111',stroke:'#fff','stroke-width':1.5,'pointer-events':'none'},e);el('text',{x:x+r*.66,y:y+r*.66+r*.11,'text-anchor':'middle','font-size':r*.38,'font-weight':800,fill:'#fff','pointer-events':'none'},e).textContent=p.n;}
   el('circle',{class:'hl',cx:x,cy:y,r:r+3.5,fill:'none',stroke:'#ffd400','stroke-width':4.5,'pointer-events':'none'},e); // resalte de ficha movible
@@ -649,7 +650,7 @@ function showTip(p,x,y,ms){
   if($('#pop').style.display==='flex'||busy)return;
   clearTimeout(tipT);const h=D.houses[p.hi],ic=icon(p),tp=$('#tip'),[sx,sy]=scr(x,y);
   tp.style.setProperty('--c',h.color);tp.className=sy<190?'below':'';
-  tp.innerHTML='<div class="im">'+(ic?'<img src="img/'+ic.u+'.png">':'<b>'+p.n+'</b>')+'</div><b>'+g.pl[p.p].name+'</b><br>'+h.name+' · ficha '+p.n;
+  tp.innerHTML='<div class="im">'+(ic?'<img src="'+IMG+ic.u+'.png">':'<b>'+p.n+'</b>')+'</div><b>'+g.pl[p.p].name+'</b><br>'+h.name+' · ficha '+p.n;
   tp.style.left=sx+'px';tp.style.top=sy+'px';tp.style.display='block';
   if(ms)tipT=setTimeout(hideTip,ms);
 }
@@ -718,6 +719,7 @@ function start(){
 $('#np').innerHTML=[2,3,4,5,6,7,8].map(n=>'<option>'+n+'</option>').join('');$('#np').value=4;
 $('#np').onchange=rows;$('#go').onclick=start;$('#again').onclick=()=>{$('#fin').style.display='none';$('#setup').style.display='flex';};
 addEventListener('resize',()=>{if(g)draw();});
+$('#fav').href=IMG+'favicon.png';
 chk('favicon').then(()=>{if(!OK.has('favicon'))$('#fav').href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>";});
 Promise.all(URLS.map(chk)).then(()=>{prep();[0,1].forEach(d=>{const e=$('#d'+d);e.innerHTML='<i></i>'.repeat(9);face(e,d?3:4);});rows();$('#setup').style.display='flex';});
 
