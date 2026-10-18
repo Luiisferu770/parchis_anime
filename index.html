@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parqués Anime</title>
+<!-- ICONO DE LA PESTAÑA: guarda tu PNG como img/favicon.png (cuadrado, ej. 128x128). Si no existe, se usa un dado 🎲 -->
+<link id="fav" rel="icon" href="img/favicon.png">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#1b1030;color:#fff;font-family:system-ui,Arial,sans-serif}
+#app{display:flex;gap:14px;height:100vh;padding:10px}#bd{flex:1;min-width:0;position:relative}#bd svg{width:100%;height:100%}
+#pn{width:290px;display:flex;flex-direction:column;gap:12px;background:#2b1a4a;border-radius:14px;padding:14px}
+h1{margin:0;font-size:20px}.hd{display:flex;justify-content:space-between;align-items:center}
+#home{font-size:22px;background:#ffffff18;border:0;border-radius:10px;padding:6px 10px;cursor:pointer}#home:hover{background:#ffffff33}
+#turno{display:flex;align-items:center;gap:8px;flex-wrap:wrap}#turno small{opacity:.7;width:100%}
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid #fff}
+button.big{padding:12px;font-size:16px;font-weight:700;border:0;border-radius:10px;background:#ffd400;color:#222;cursor:pointer}button.big:disabled{opacity:.4;cursor:default}
+#msg{min-height:40px;font-size:14px}#extra{font-size:13px;color:#ffd400;min-height:16px}
+#log{font-size:12px;opacity:.85;overflow:auto;flex:1}#log div{padding:2px 0;border-bottom:1px solid #ffffff22}
+/* dados */
+#dice{--ds:clamp(40px,6.4vmin,72px);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:calc(var(--ds)*.4);z-index:3;cursor:pointer;filter:drop-shadow(0 8px 6px #0007)}
+.dd{width:var(--ds);height:var(--ds);border-radius:20%;border:3px solid var(--c,#fff);background:linear-gradient(145deg,#fff 0%,#e9e9f5 55%,#c9c9dc 100%);box-shadow:inset 0 -5px 0 #b4b4c8,inset 0 2px 4px #fff;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:13%;transition:opacity .25s,filter .25s}
+.dd i{border-radius:50%;margin:8%;visibility:hidden;background:radial-gradient(circle at 35% 30%,#555,#111)}.dd i.on{visibility:visible}
+.dd.used{opacity:.4;filter:grayscale(.7)}
+.dd.rolling{animation:tumble .75s cubic-bezier(.3,.7,.4,1)}
+@keyframes tumble{0%{transform:translateY(-34px) rotate(0) scale(1.25)}30%{transform:translateY(0) rotate(260deg) scale(1)}50%{transform:translateY(-16px) rotate(430deg) scale(1.1)}75%{transform:translateY(0) rotate(620deg) scale(1)}100%{transform:translateY(0) rotate(720deg) scale(1)}}
+/* fichas */
+.hl{display:none}.tk.mv{cursor:pointer;animation:hop 1s ease-in-out infinite}.tk.mv .hl{display:block}
+@keyframes hop{50%{transform:translateY(-4px)}}
+/* tooltip con la imagen grande de la ficha */
+#tip{position:absolute;display:none;z-index:7;pointer-events:none;background:#1b1030ee;border:2px solid var(--c,#fff);border-radius:14px;padding:8px;text-align:center;box-shadow:0 10px 26px #000a;transform:translate(-50%,-112%);font-size:12px;line-height:1.3}
+#tip.below{transform:translate(-50%,18%)}
+#tip .im{width:128px;height:128px;border-radius:12px;background:radial-gradient(circle at 35% 30%,#4a3a66,#120a20);display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+#tip .im img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 3px 4px #000)}
+#tip .im b{font-size:56px}
+/* ventana flotante de opciones */
+#pop{position:absolute;display:none;gap:8px;padding:9px 10px;background:#fff;color:#222;border-radius:16px;box-shadow:0 10px 28px #000a;transform:translate(-50%,-128%);z-index:6}
+#pop::after{content:'';position:absolute;left:50%;bottom:-7px;width:16px;height:16px;background:#fff;transform:translateX(-50%) rotate(45deg);border-radius:3px}
+#pop.below{transform:translate(-50%,46%)}#pop.below::after{bottom:auto;top:-7px}
+#pop button{min-width:62px;padding:6px 8px;border:0;border-radius:12px;background:#efeafc;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;position:relative;z-index:1}
+#pop button b{font-size:24px;line-height:1}#pop button small{font-size:11px;color:#555}#pop button:hover{background:#ffd400}
+.ov{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:9}
+.card{background:#2b1a4a;border-radius:16px;padding:22px;max-width:560px;width:92%;display:flex;flex-direction:column;gap:10px;max-height:94vh;overflow:auto}
+.row{display:flex;gap:8px}.row input,.row select,#np{padding:9px;border-radius:8px;border:0;font-size:14px}.row input{flex:1;min-width:0}#err{color:#ff8a8a;min-height:18px}
+@media(max-width:800px){#app{flex-direction:column;height:auto}#bd{height:92vw}#pn{width:auto}}
+</style></head><body>
+<div id="app"><div id="bd"><svg id="tab" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 304 1104 1096" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: .66px;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5, .cls-6, .cls-7, .cls-8, .cls-9, .cls-10, .cls-11, .cls-12, .cls-13, .cls-14, .cls-15, .cls-16, .cls-17 {
+        fill: none;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5, .cls-7, .cls-8, .cls-9, .cls-10, .cls-11, .cls-12, .cls-13, .cls-14, .cls-15, .cls-16, .cls-17 {
+        stroke: #000;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-18 {
+        clip-path: url(#clippath-6);
+      }
+
+      .cls-19 {
+        clip-path: url(#clippath-7);
+      }
+
+      .cls-2 {
+        stroke-width: .66px;
+      }
+
+      .cls-20 {
+        clip-path: url(#clippath-4);
+      }
+
+      .cls-3 {
+        stroke-width: .66px;
+      }
+
+      .cls-4 {
+        stroke-width: 12px;
+      }
+
+      .cls-21 {
+        clip-path: url(#clippath-9);
+      }
+
+      .cls-22 {
+        clip-path: url(#clippath-10);
+      }
+
+      .cls-23 {
+        fill: #f30000;
+      }
+
+      .cls-5 {
+        stroke-width: .66px;
+      }
+
+      .cls-24 {
+        clip-path: url(#clippath-11);
+      }
+
+      .cls-25 {
+        fill: #cc00be;
+      }
+
+      .cls-26 {
+        fill: #8c0909;
+      }
+
+      .cls-7 {
+        stroke-width: 5.55px;
+      }
+
+      .cls-8 {
+        stroke-width: .66px;
+      }
+
+      .cls-27 {
+        clip-path: url(#clippath-1);
+      }
+
+      .cls-28 {
+        fill: #ff85f1;
+      }
+
+      .cls-29 {
+        fill: #0ceef4;
+      }
+
+      .cls-30 {
+        fill: #55ff68;
+      }
+
+      .cls-31 {
+        fill: #f4a531;
+      }
+
+      .cls-32 {
+        clip-path: url(#clippath-5);
+      }
+
+      .cls-33 {
+        clip-path: url(#clippath-8);
+      }
+
+      .cls-34 {
+        fill: #aab208;
+      }
+
+      .cls-35 {
+        fill: #0500cc;
+      }
+
+      .cls-36 {
+        fill: #2a0244;
+      }
+
+      .cls-9 {
+        stroke-width: .66px;
+      }
+
+      .cls-37 {
+        clip-path: url(#clippath-3);
+      }
+
+      .cls-38 {
+        fill: #1b0078;
+      }
+
+      .cls-39 {
+        fill: #009108;
+      }
+
+      .cls-40 {
+        clip-path: url(#clippath-12);
+      }
+
+      .cls-41 {
+        fill: #0b8484;
+      }
+
+      .cls-42 {
+        fill: #5f0996;
+      }
+
+      .cls-10 {
+        stroke-width: .66px;
+      }
+
+      .cls-43 {
+        fill: #ebff34;
+      }
+
+      .cls-44 {
+        fill: #c67100;
+      }
+
+      .cls-11 {
+        stroke-width: .66px;
+      }
+
+      .cls-12 {
+        stroke-width: .66px;
+      }
+
+      .cls-13 {
+        stroke-width: .66px;
+      }
+
+      .cls-45 {
+        clip-path: url(#clippath-2);
+      }
+
+      .cls-14 {
+        stroke-width: .66px;
+      }
+
+      .cls-15 {
+        stroke-width: 5px;
+      }
+
+      .cls-46 {
+        clip-path: url(#clippath);
+      }
+
+      .cls-16 {
+        stroke-width: .66px;
+      }
+
+      .cls-17 {
+        stroke-width: .66px;
+      }
+    </style>
+    <clipPath id="clippath">
+      <polygon class="cls-6" points="626.55 676.16 478.12 676.16 373.16 781.12 373.16 929.56 478.12 1034.52 626.55 1034.52 731.51 929.56 731.51 781.12 626.55 676.16"/>
+    </clipPath>
+    <clipPath id="clippath-1">
+      <polygon class="cls-6" points="666.34 583.67 851.15 398.84 774.01 321.71 666.07 321.71 666.34 583.67"/>
+    </clipPath>
+    <clipPath id="clippath-2">
+      <polygon class="cls-6" points="824.8 743.38 1086.12 743.38 1086.34 633.99 1010.57 558.23 824.8 743.38"/>
+    </clipPath>
+    <clipPath id="clippath-3">
+      <path class="cls-6" d="M825.02,968.47l185.23,185.23c25.88-25.18,51.75-50.36,77.63-75.54v-109.69h-262.86Z"/>
+    </clipPath>
+    <clipPath id="clippath-4">
+      <polygon class="cls-6" points="666.26 1127.03 666.02 1383.38 773.51 1389.12 851.49 1312.47 666.26 1127.03"/>
+    </clipPath>
+    <clipPath id="clippath-5">
+      <path class="cls-6" d="M440.63,1122.64c-63.87,62.95-127.74,125.9-191.62,188.85,27.11,25.74,54.22,51.47,81.34,77.21,36.69.14,73.38.29,110.06.43.07-88.83.14-177.66.22-266.49Z"/>
+    </clipPath>
+    <clipPath id="clippath-6">
+      <polygon class="cls-6" points="279.89 966.75 19.25 966.66 18.26 1076.34 94.66 1151.98 279.89 966.75"/>
+    </clipPath>
+    <clipPath id="clippath-7">
+      <path class="cls-6" d="M300.26,741.54c-66.12-61.99-132.24-123.98-198.35-185.97-27.88,26.64-55.77,53.28-83.65,79.91.33,35.26.66,70.52.99,105.79,93.67.09,187.34.18,281.01.27Z"/>
+    </clipPath>
+    <clipPath id="clippath-8">
+      <polygon class="cls-6" points="438.53 582.74 438.53 318.81 331.09 321.21 254.05 398.26 438.53 582.74"/>
+    </clipPath>
+    <clipPath id="clippath-9">
+      <polygon class="cls-6" points="769.59 1395.34 1092.34 1395.34 1092.34 1077.36 769.59 1395.34"/>
+    </clipPath>
+    <clipPath id="clippath-10">
+      <polygon class="cls-6" points="12.34 1077.36 12.34 1395.34 335.21 1395.34 12.34 1077.36"/>
+    </clipPath>
+    <clipPath id="clippath-11">
+      <polygon class="cls-6" points="772.95 315.34 1092.34 636.68 1092.34 315.34 772.95 315.34"/>
+    </clipPath>
+    <clipPath id="clippath-12">
+      <polygon class="cls-6" points="12.34 315.34 12.34 633.45 330.19 315.34 12.34 315.34"/>
+    </clipPath>
+  </defs>
+  <g id="Fondos">
+    <g class="cls-46">
+      <image width="720" height="1280" transform="translate(372.8 534.59) scale(.5)" xlink:href="img/kaiosama.png.jpg"/>
+    </g>
+    <g class="cls-27">
+      <image width="736" height="1307" transform="translate(642.88 168.77) scale(.31)" xlink:href="img/infinito.png.jpg"/>
+    </g>
+    <g class="cls-45">
+      <image width="736" height="1308" transform="translate(701.6 739.8) rotate(-79.21) scale(.32)" xlink:href="img/konoha.png.jpg"/>
+    </g>
+    <g class="cls-37">
+      <image width="736" height="1307" transform="translate(816.64 976.73) rotate(-46.6) scale(.26)" xlink:href="img/yorknew.png.jpg"/>
+    </g>
+    <g class="cls-20">
+      <image width="736" height="1308" transform="translate(641.13 1035.03) scale(.28)" xlink:href="img/westalis y ostania.jpg"/>
+    </g>
+    <g class="cls-32">
+      <image width="736" height="1308" transform="translate(257.81 1124.37) rotate(.18) scale(.25)" xlink:href="img/shibuya.png.jpg"/>
+    </g>
+    <g class="cls-18">
+      <image width="735" height="981" transform="translate(10.71 762.06) scale(.36 .39)" xlink:href="img/muralla.png"/>
+    </g>
+    <g class="cls-19">
+      <image width="735" height="1169" transform="translate(24.08 445.42) scale(.35)" xlink:href="img/karakura.png.jpg"/>
+    </g>
+    <g class="cls-33">
+      <image width="736" height="1307" transform="translate(253.55 222.51) scale(.28)" xlink:href="img/trebol.png.jpg"/>
+    </g>
+    <g class="cls-21">
+      <image width="736" height="1307" transform="translate(769.59 931.5) scale(.58)" xlink:href="img/studio ghibli.jpg"/>
+    </g>
+    <g class="cls-22">
+      <image width="736" height="1306" transform="translate(9.62 971.57) scale(.45)" xlink:href="img/descarga (6).jpg"/>
+    </g>
+    <path class="cls-6" d="M774.01,315.34c106.11,107.11,212.21,214.23,318.32,321.34v-321.34h-318.32Z"/>
+    <g class="cls-24">
+      <image width="736" height="1034" transform="translate(776.66) scale(.62)" xlink:href="img/descarga (7).jpg"/>
+    </g>
+    <g class="cls-40">
+      <image width="736" height="1307" transform="translate(0 40.22) scale(.45)" xlink:href="img/descarga (2).jpg"/>
+    </g>
+  </g>
+  <g id="Colores">
+    <polygon class="cls-23" points="590.78 321.71 590.78 676.16 626.3 676.77 651.8 700.05 901.1 449.22 849.39 400.35 696.56 553.41 666.34 583.67 666.07 323.24 590.78 321.71"/>
+    <polygon class="cls-26" points="513.9 321.71 513.9 676.77 590.78 676.16 590.78 321.71 513.9 321.71"/>
+    <polyline class="cls-26" points="745.94 602.86 776.85 571.95 727.32 522.42 696.56 553.41"/>
+    <polygon class="cls-26" points="593.29 540.26 665.58 540.26 666.07 496.35 593.29 496.35 593.29 540.26"/>
+    <polygon class="cls-43" points="730.42 780.77 731.51 820.09 1086.12 816.85 1086.34 743.38 824.8 743.38 1010.57 558.23 955.38 502.14 703.53 753.99 730.42 780.77"/>
+    <polygon class="cls-34" points="651.8 700.05 703.53 753.99 955.38 502.14 901.1 449.22 651.8 700.05"/>
+    <polygon class="cls-34" points="800.87 657.53 855.72 712.57 886.54 681.64 832.23 627.33 800.87 657.53"/>
+    <polygon class="cls-34" points="867.82 743.38 868.51 818.84 911.48 818.84 911.48 743.38 867.82 743.38"/>
+    <polygon class="cls-35" points="706.47 954.28 958.07 1205.88 1010.25 1153.7 824.8 968.32 1087.88 968.47 1086.12 896.97 731.51 896.97 731.51 929.73 706.47 954.28"/>
+    <polygon class="cls-38" points="731.51 820.09 731.51 896.97 867.82 896.97 1086.12 896.97 1086.12 820.09 731.51 820.09"/>
+    <polygon class="cls-38" points="867.82 968.47 911.48 968.32 911.48 896.97 867.82 896.97 867.82 968.47"/>
+    <rect class="cls-38" x="808.34" y="1019.04" width="73.79" height="43.66" transform="translate(-488.44 902.54) rotate(-45)"/>
+    <polygon class="cls-28" points="590.99 1389.12 666.02 1391.23 666.02 1126.42 853.69 1314.13 902.86 1259.39 651.84 1008.38 628.2 1032.02 592.7 1034.52 590.99 1389.12"/>
+    <polygon class="cls-25" points="651.84 1008.38 902.86 1259.39 958.07 1205.88 706.47 954.28 651.84 1008.38"/>
+    <polygon class="cls-25" points="746.92 1106.84 697.13 1158.11 728 1188.98 780.22 1136.76 746.92 1106.84"/>
+    <polygon class="cls-25" points="666.02 1170.08 592.05 1169.72 592.05 1213.74 666.02 1213.74 666.02 1170.08"/>
+    <path class="cls-29" d="M452.18,1009.26l-250.47,250.51,49.38,52.75c77.7-76.36,110.8-109.87,126.01-125.83,3.3-3.47,14.73-15.51,30.79-31.15,13.37-13.02,24.5-23.23,31.43-29.49-.24,87.69-.47,175.39-.71,263.08h75.5v-354.61h-34.9l-27.03-25.26Z"/>
+    <polygon class="cls-41" points="514.11 1034.52 514.11 1169.72 514.11 1389.12 590.99 1389.12 592.7 1034.52 514.11 1034.52"/>
+    <path class="cls-41" d="M438.61,1170.08v43.66h75.5v-44.02c-25.17.12-50.34.24-75.5.36Z"/>
+    <polygon class="cls-41" points="356.81 1104.64 325.55 1135.9 376.84 1187.47 407.52 1156.12 356.81 1104.64"/>
+    <path class="cls-30" d="M19.25,893.61v73.05c86.88.03,173.76.06,260.64.09-61.89,61.84-123.79,123.69-185.68,185.53,17.62,17.79,35.24,35.58,52.86,53.36l250.75-250.75-24.66-25.34v-35.95H19.25Z"/>
+    <polygon class="cls-39" points="452.18 1009.26 397.82 954.9 147.07 1205.64 201.71 1259.76 452.18 1009.26"/>
+    <rect class="cls-39" x="238.27" y="1002.07" width="43.66" height="75.01" transform="translate(-658.91 488.4) rotate(-45)"/>
+    <rect class="cls-39" x="193.89" y="893.61" width="43.66" height="73.05"/>
+    <path class="cls-31" d="M147.71,505.08l-51.87,51.87,184.57,184.6c-88.02-.09-176.03-.18-264.05-.27.73,25.15,1.46,50.3,2.19,75.45h355.21l-.6-35.6,25.3-25.3-250.75-250.75Z"/>
+    <polygon class="cls-44" points="18.55 816.73 19.25 893.61 373.16 893.61 373.76 816.73 18.55 816.73"/>
+    <rect class="cls-44" x="193.89" y="741.54" width="43.66" height="75.18"/>
+    <polygon class="cls-44" points="249.12 710.4 301.08 658.45 270.21 627.57 218.33 679.45 249.12 710.4"/>
+    <polygon class="cls-42" points="200.1 447.78 452.82 701.46 478.12 676.16 513.9 676.77 513.9 321.71 438.53 321.71 438.53 582.74 253.3 397.51 200.1 447.78"/>
+    <polygon class="cls-36" points="147.71 505.08 398.46 755.82 452.82 701.46 200.1 447.78 147.71 505.08"/>
+    <polygon class="cls-36" points="376.79 521 324.72 572.87 355.69 603.84 407.66 551.87 376.79 521"/>
+    <rect class="cls-36" x="438.53" y="496.35" width="75.37" height="43.66"/>
+  </g>
+  <g id="Capa_2" data-name="Capa 2">
+    <polygon class="cls-4" points="773.51 321.21 331.09 321.21 18.26 633.99 18.26 1076.34 331.09 1389.12 773.51 1389.12 1086.34 1076.34 1086.34 633.99 773.51 321.21"/>
+    <polygon class="cls-15" points="626.3 676.77 478.37 676.77 373.76 781.37 373.76 929.31 478.37 1033.92 626.3 1033.92 730.91 929.31 730.91 781.37 626.3 676.77"/>
+  </g>
+  <g id="Capa_5" data-name="Capa 5">
+    <rect class="cls-15" x="514.11" y="1034.52" width="76.88" height="354.61"/>
+    <g>
+      <rect class="cls-5" x="741.42" y="1134.08" width="224.53" height="43.66" transform="translate(-567.31 942.21) rotate(-45)"/>
+      <rect class="cls-5" x="710.55" y="1103.2" width="224.53" height="43.66" transform="translate(-554.52 911.33) rotate(-45)"/>
+      <rect class="cls-5" x="679.68" y="1072.33" width="224.53" height="43.66" transform="translate(-541.73 880.46) rotate(-45)"/>
+      <rect class="cls-5" x="648.81" y="1041.46" width="224.53" height="43.66" transform="translate(-528.95 849.59) rotate(-45)"/>
+      <rect class="cls-5" x="772.3" y="1164.95" width="224.53" height="43.66" transform="translate(-580.1 973.08) rotate(-45)"/>
+      <rect class="cls-5" x="803.17" y="1195.82" width="224.53" height="43.66" transform="translate(-592.88 1003.95) rotate(-45)"/>
+    </g>
+    <rect class="cls-7" x="513.9" y="321.71" width="76.88" height="354.61" transform="translate(1104.67 998.04) rotate(-180)"/>
+    <g>
+      <rect class="cls-17" x="438.53" y="409.03" width="227.54" height="43.66" transform="translate(1104.6 861.73) rotate(-180)"/>
+      <rect class="cls-17" x="438.53" y="452.69" width="227.54" height="43.66" transform="translate(1104.6 949.05) rotate(-180)"/>
+      <rect class="cls-17" x="438.53" y="496.35" width="227.54" height="43.66" transform="translate(1104.6 1036.36) rotate(-180)"/>
+      <rect class="cls-17" x="438.53" y="540.01" width="227.54" height="43.66" transform="translate(1104.6 1123.68) rotate(-180)"/>
+      <rect class="cls-17" x="438.53" y="365.37" width="227.54" height="43.66" transform="translate(1104.6 774.41) rotate(-180)"/>
+      <rect class="cls-17" x="438.53" y="321.71" width="227.54" height="43.66" transform="translate(1104.6 687.09) rotate(-180)"/>
+    </g>
+    <rect class="cls-7" x="870.38" y="681.23" width="76.88" height="354.61" transform="translate(50.29 1767.35) rotate(-90)"/>
+    <g>
+      <rect class="cls-10" x="864.5" y="834.02" width="224.94" height="43.66" transform="translate(121.12 1832.82) rotate(-90)"/>
+      <rect class="cls-10" x="820.84" y="834.02" width="224.94" height="43.66" transform="translate(77.46 1789.16) rotate(-90)"/>
+      <rect class="cls-10" x="777.18" y="834.02" width="224.94" height="43.66" transform="translate(33.8 1745.5) rotate(-90)"/>
+      <rect class="cls-10" x="733.52" y="834.02" width="224.94" height="43.66" transform="translate(-9.86 1701.84) rotate(-90)"/>
+      <rect class="cls-10" x="908.16" y="834.02" width="224.94" height="43.66" transform="translate(164.78 1876.48) rotate(-90)"/>
+      <rect class="cls-10" x="951.82" y="834.02" width="224.94" height="43.66" transform="translate(208.44 1920.14) rotate(-90)"/>
+    </g>
+    <rect class="cls-7" x="766.23" y="929.53" width="76.88" height="354.61" transform="translate(-546.97 893.17) rotate(-45)"/>
+    <rect class="cls-7" x="764.39" y="423.03" width="76.88" height="354.61" transform="translate(946.01 1592.52) rotate(-135)"/>
+    <g>
+      <rect class="cls-16" x="740.65" y="533.89" width="225.17" height="43.66" transform="translate(1063.62 1552.01) rotate(-135)"/>
+      <rect class="cls-16" x="709.78" y="564.76" width="225.17" height="43.66" transform="translate(989.08 1582.88) rotate(-135)"/>
+      <rect class="cls-16" x="678.91" y="595.64" width="225.17" height="43.66" transform="translate(914.55 1613.75) rotate(-135)"/>
+      <rect class="cls-16" x="648.04" y="626.51" width="225.17" height="43.66" transform="translate(840.02 1644.62) rotate(-135)"/>
+      <rect class="cls-16" x="771.53" y="503.02" width="225.17" height="43.66" transform="translate(1138.15 1521.13) rotate(-135)"/>
+      <rect class="cls-16" x="802.4" y="472.15" width="225.17" height="43.66" transform="translate(1212.68 1490.26) rotate(-135)"/>
+    </g>
+    <rect class="cls-7" x="261.19" y="930.15" width="76.88" height="354.61" transform="translate(870.84 112.5) rotate(45)"/>
+    <g>
+      <rect class="cls-3" x="139.01" y="1132.22" width="224.16" height="43.66" transform="translate(889.58 160.47) rotate(45)"/>
+      <rect class="cls-3" x="169.88" y="1101.35" width="224.16" height="43.66" transform="translate(876.79 129.59) rotate(45)"/>
+      <rect class="cls-3" x="200.75" y="1070.48" width="224.16" height="43.66" transform="translate(864 98.72) rotate(45)"/>
+      <path class="cls-3" d="M407.52,1156.12l-158.51-158.51,30.87-30.87,159.43,159.3c-10.6,10.03-21.19,20.05-31.79,30.08Z"/>
+      <rect class="cls-3" x="108.14" y="1163.09" width="224.16" height="43.66" transform="translate(902.37 191.34) rotate(45)"/>
+      <rect class="cls-3" x="77.27" y="1193.96" width="224.16" height="43.66" transform="translate(915.16 222.21) rotate(45)"/>
+    </g>
+    <rect class="cls-7" x="261.82" y="425.96" width="76.88" height="354.61" transform="translate(939.16 817.52) rotate(135)"/>
+    <g>
+      <rect class="cls-8" x="139.11" y="532.13" width="224.2" height="43.66" transform="translate(820.55 768.03) rotate(135)"/>
+      <rect class="cls-8" x="169.98" y="563" width="224.2" height="43.66" transform="translate(895.08 798.9) rotate(135)"/>
+      <rect class="cls-8" x="200.85" y="593.87" width="224.2" height="43.66" transform="translate(969.61 829.77) rotate(135)"/>
+      <rect class="cls-8" x="231.73" y="624.74" width="224.2" height="43.66" transform="translate(1044.15 860.64) rotate(135)"/>
+      <rect class="cls-8" x="108.24" y="501.25" width="224.2" height="43.66" transform="translate(746.02 737.16) rotate(135)"/>
+      <rect class="cls-8" x="77.37" y="470.38" width="224.2" height="43.66" transform="translate(671.49 706.28) rotate(135)"/>
+    </g>
+    <rect class="cls-7" x="157.42" y="677.86" width="76.88" height="354.61" transform="translate(1051.02 659.31) rotate(90)"/>
+    <g>
+      <rect class="cls-1" x="15.84" y="832.27" width="225.12" height="43.66" transform="translate(982.5 725.7) rotate(90)"/>
+      <rect class="cls-1" x="59.5" y="832.27" width="225.12" height="43.66" transform="translate(1026.16 682.04) rotate(90)"/>
+      <rect class="cls-1" x="103.16" y="832.27" width="225.12" height="43.66" transform="translate(1069.82 638.38) rotate(90)"/>
+      <path class="cls-1" d="M237.55,966.66v-225.12h42.86l-.52,225.2c-14.11-.03-28.23-.06-42.34-.09Z"/>
+      <rect class="cls-1" x="-27.82" y="832.27" width="225.12" height="43.66" transform="translate(938.84 769.36) rotate(90)"/>
+      <rect class="cls-1" x="-71.47" y="832.27" width="225.12" height="43.66" transform="translate(895.18 813.02) rotate(90)"/>
+    </g>
+    <path class="cls-12" d="M666.02,1126.42c-75.57-.13-151.13-.25-226.7-.38,6.19-14.39,12.38-28.79,18.57-43.18,63.54.2,127.08.41,190.62.61,5.84,14.31,11.68,28.63,17.52,42.94Z"/>
+    <path class="cls-12" d="M648.5,1083.48c-63.54-.2-127.08-.41-190.62-.61,7.11-16.65,14.22-33.3,21.33-49.95,48.92-.18,97.83-.37,146.75-.55,7.51,17.04,15.03,34.08,22.54,51.12Z"/>
+    <g>
+      <path class="cls-11" d="M824.66,968.62l-158.41,158.41c-5.96-14.52-11.92-29.03-17.88-43.55,44.37-44.48,88.74-88.95,133.11-133.43,14.39,6.19,28.78,12.38,43.17,18.57Z"/>
+      <path class="cls-11" d="M781.49,950.04c-44.37,44.48-88.74,88.95-133.11,133.43-7.25-16.62-14.49-33.24-21.74-49.85,34.84-34.63,69.67-69.26,104.51-103.89,16.78,6.77,33.57,13.54,50.35,20.32Z"/>
+    </g>
+    <g>
+      <path class="cls-14" d="M824.8,743.38v224.94c-14.48-6.08-28.96-12.15-43.44-18.23-.07-63.08-.15-126.16-.22-189.25,14.55-5.82,29.11-11.64,43.66-17.46Z"/>
+      <path class="cls-14" d="M781.14,760.85c.07,63.08.15,126.16.22,189.25-16.87-6.65-33.75-13.31-50.62-19.96,0-49.66,0-99.32,0-148.97,16.8-6.77,33.6-13.54,50.4-20.31Z"/>
+    </g>
+    <g>
+      <path class="cls-13" d="M666.34,583.67c52.82,53.24,105.63,106.47,158.45,159.71-14.55,5.82-29.1,11.64-43.65,17.46-44.49-44.7-88.97-89.39-133.46-134.09,6.22-14.36,12.44-28.72,18.66-43.08Z"/>
+      <path class="cls-13" d="M647.68,626.76c44.49,44.7,88.97,89.39,133.46,134.09-16.91,6.64-33.82,13.28-50.72,19.92-34.41-34.35-68.82-68.69-103.23-103.04,6.83-16.99,13.67-33.98,20.5-50.98Z"/>
+    </g>
+    <g>
+      <rect class="cls-9" x="438.61" y="1257.4" width="227.41" height="43.66"/>
+      <rect class="cls-9" x="438.61" y="1213.74" width="227.41" height="43.66"/>
+      <rect class="cls-9" x="438.61" y="1170.08" width="227.41" height="43.66"/>
+      <path class="cls-9" d="M666.02,1170.08h-227.41c.24-14.68.47-29.36.71-44.04,75.57.13,151.13.25,226.7.38v43.66Z"/>
+      <rect class="cls-9" x="438.61" y="1301.06" width="227.41" height="43.66"/>
+      <rect class="cls-9" x="438.61" y="1344.72" width="227.41" height="43.66"/>
+    </g>
+    <path class="cls-17" d="M438.53,583.67h227.54c-6.15,14.48-12.29,28.96-18.44,43.44-63.81.07-127.63.15-191.44.22-5.89-14.55-11.78-29.11-17.67-43.66Z"/>
+    <path class="cls-17" d="M456.2,627.33c63.81-.07,127.63-.15,191.44-.22-6.73,16.87-13.46,33.75-20.19,50.62-49.77.22-99.54.45-149.31.67-7.31-17.02-14.62-34.05-21.94-51.07Z"/>
+    <path class="cls-2" d="M279.89,966.75l.52-225.2c14.39,6.29,28.79,12.58,43.18,18.87.43,62.96.85,125.91,1.28,188.87-14.99,5.82-29.99,11.64-44.98,17.47Z"/>
+    <path class="cls-2" d="M324.87,949.28c-.43-63.17-.85-126.33-1.28-189.5,17.23,7.01,34.45,14.02,51.68,21.03v148.26c-16.8,6.74-33.6,13.47-50.4,20.21Z"/>
+    <g>
+      <path class="cls-8" d="M280.41,741.54l158.54-158.54c5.96,14.52,11.91,29.04,17.87,43.56-44.41,44.51-88.82,89.03-133.22,133.54-14.39-6.19-28.79-12.38-43.18-18.56Z"/>
+      <path class="cls-8" d="M323.59,760.11c44.41-44.51,88.82-89.03,133.22-133.54,7.24,16.62,14.49,33.24,21.73,49.87-35,35-70,70-105,105-16.65-7.11-33.3-14.22-49.95-21.32Z"/>
+    </g>
+    <path class="cls-3" d="M439.31,1126.04c-53.14-53.1-106.28-106.2-159.43-159.3,14.93-5.88,29.87-11.76,44.8-17.65,44.4,44.59,88.79,89.18,133.19,133.77-6.19,14.39-12.38,28.79-18.57,43.18Z"/>
+    <path class="cls-3" d="M457.88,1082.86c-44.4-44.59-88.79-89.18-133.19-133.77,17-6.93,33.99-13.85,50.99-20.78,34.51,34.87,69.02,69.73,103.53,104.6-7.11,16.65-14.22,33.3-21.33,49.95Z"/>
+  </g>
+</svg><div id="dice"><div class="dd" id="d0"></div><div class="dd" id="d1"></div></div><div id="pop"></div><div id="tip"></div></div>
+<aside id="pn"><div class="hd"><h1>🎲 Parqués Anime</h1><button id="home" title="Reiniciar partida">🏠</button></div><div id="turno"></div>
+<button class="big" id="roll">Lanzar dados</button><div id="extra"></div><div id="msg"></div><div id="log"></div></aside></div>
+<div class="ov" id="setup"><div class="card"><h1>🎌 Parqués Anime</h1><label>Número de jugadores <select id="np"></select></label>
+<div id="rows"></div><div id="err"></div><button class="big" id="go">Empezar</button></div></div>
+<div class="ov" id="fin"><div class="card"><h1 id="finTxt"></h1><button class="big" id="again">Nueva partida</button></div></div>
+<script>
+const D={"cells":[[552.3,344.0,0.0,1,136],[475.5,344.0,0.0,0,1],[475.5,387.7,0.0,0,2],[475.5,431.4,0.0,0,3],[475.5,475.0,0.0,0,4],[475.5,518.7,0.0,2,5],[475.5,562.5,0.0,0,6],[481.2,605.9,0.0,0,7],[491.4,652.0,0.0,0,8],[451.6,668.5,-45.0,0,9],[426.3,628.7,-45.0,0,10],[399.7,593.9,-45.0,0,11],[368.7,562.9,-45.0,1,12],[337.8,532.0,-45.0,0,13],[306.9,501.2,-45.0,0,14],[276.0,470.3,-45.0,0,15],[245.2,439.4,-45.0,0,16],[190.8,493.8,-45.0,1,17],[136.4,548.1,-45.0,0,18],[167.3,579.0,-45.0,0,19],[198.2,609.9,-45.0,0,20],[229.1,640.7,-45.0,0,21],[260.0,671.7,-45.0,2,22],[290.9,702.6,-45.0,0,23],[325.7,729.2,-45.0,0,24],[365.5,754.6,-45.0,0,25],[349.0,794.4,-90.0,0,26],[302.9,784.2,-90.0,0,27],[259.5,778.4,-90.0,0,28],[215.7,778.4,-90.0,1,29],[172.0,778.4,-90.0,0,30],[128.4,778.4,-90.0,0,31],[84.7,778.4,-90.0,0,32],[41.1,778.4,-90.0,0,33],[41.1,855.3,-90.0,1,34],[41.1,932.2,-90.0,0,35],[84.7,932.2,-90.0,0,36],[128.4,932.2,-90.0,0,37],[172.0,932.2,-90.0,0,38],[215.7,932.2,-90.0,2,39],[259.5,932.2,-90.0,0,40],[302.9,926.4,-90.0,0,41],[349.0,916.2,-90.0,0,42],[365.5,956.0,45.0,0,43],[325.7,981.4,45.0,0,44],[290.9,1008.0,45.0,0,45],[260.0,1038.9,45.0,1,46],[229.1,1069.9,45.0,0,47],[198.2,1100.7,45.0,0,48],[167.3,1131.6,45.0,0,49],[136.4,1162.5,45.0,0,50],[190.8,1216.8,45.0,1,51],[245.2,1271.2,45.0,0,52],[276.0,1240.3,45.0,0,53],[306.9,1209.4,45.0,0,54],[337.8,1178.6,45.0,0,55],[368.7,1147.7,45.0,2,56],[399.7,1116.7,45.0,0,57],[426.3,1081.9,45.0,0,58],[451.6,1042.1,45.0,0,59],[491.4,1058.6,0.0,0,60],[481.2,1104.7,0.0,0,61],[475.5,1148.1,0.0,0,62],[475.4,1191.9,0.0,1,63],[475.4,1235.6,0.0,0,64],[475.4,1279.2,0.0,0,65],[475.4,1322.9,0.0,0,66],[475.4,1366.6,0.0,0,67],[552.3,1366.6,0.0,1,68],[629.2,1366.6,0.0,0,69],[629.2,1322.9,0.0,0,70],[629.2,1279.2,0.0,0,71],[629.2,1235.6,0.0,0,72],[629.2,1191.9,0.0,2,73],[629.2,1148.1,0.0,0,74],[623.4,1104.7,0.0,0,75],[613.2,1058.6,0.0,0,76],[653.0,1042.1,-45.0,0,77],[678.4,1081.9,-45.0,0,78],[705.0,1116.7,-45.0,0,79],[736.0,1147.7,-45.0,1,80],[766.9,1178.6,-45.0,0,81],[797.7,1209.4,-45.0,0,82],[828.6,1240.3,-45.0,0,83],[859.5,1271.2,-45.0,0,84],[913.9,1216.8,-45.0,1,85],[968.2,1162.5,-45.0,0,86],[937.3,1131.6,-45.0,0,87],[906.4,1100.7,-45.0,0,88],[875.6,1069.9,-45.0,0,89],[844.7,1038.9,-45.0,2,90],[813.7,1008.0,-45.0,0,91],[779.0,981.4,-45.0,0,92],[739.1,956.0,-45.0,0,93],[755.6,916.2,-90.0,0,94],[801.7,926.4,-90.0,0,95],[845.1,932.2,-90.0,0,96],[888.9,932.2,-90.0,1,97],[932.6,932.2,-90.0,0,98],[976.2,932.2,-90.0,0,99],[1019.9,932.2,-90.0,0,100],[1063.6,932.2,-90.0,0,101],[1063.6,855.3,-90.0,1,102],[1063.6,778.4,-90.0,0,103],[1019.9,778.4,-90.0,0,104],[976.2,778.4,-90.0,0,105],[932.6,778.4,-90.0,0,106],[888.9,778.4,-90.0,2,107],[845.1,778.4,-90.0,0,108],[801.7,784.2,-90.0,0,109],[755.6,794.4,-90.0,0,110],[739.1,754.6,45.0,0,111],[779.0,729.2,45.0,0,112],[813.7,702.6,45.0,0,113],[844.7,671.7,45.0,1,114],[875.6,640.7,45.0,0,115],[906.4,609.9,45.0,0,116],[937.3,579.0,45.0,0,117],[968.2,548.1,45.0,0,118],[913.9,493.8,45.0,1,119],[859.5,439.4,45.0,0,120],[828.6,470.3,45.0,0,121],[797.7,501.2,45.0,0,122],[766.9,532.0,45.0,0,123],[736.0,562.9,45.0,2,124],[705.0,593.9,45.0,0,125],[678.4,628.7,45.0,0,126],[653.0,668.5,45.0,0,127],[613.2,652.0,0.0,0,128],[623.4,605.9,0.0,0,129],[629.2,562.5,0.0,0,130],[629.2,518.7,0.0,1,131],[629.2,475.0,0.0,0,132],[629.2,431.4,0.0,0,133],[629.2,387.7,0.0,0,134],[629.2,344.0,0.0,0,135]],"home":[[[552.3,387.7],[552.3,431.4],[552.3,475.0],[552.3,518.7],[552.3,562.5],[552.3,605.9],[552.3,652.0]],[[221.7,524.7],[252.6,555.6],[283.4,586.4],[314.3,617.3],[345.3,648.3],[376.0,678.9],[408.6,711.5]],[[84.7,855.3],[128.4,855.3],[172.0,855.3],[215.7,855.3],[259.5,855.3],[302.9,855.3],[349.0,855.3]],[[221.7,1185.9],[252.6,1155.0],[283.4,1124.2],[314.3,1093.3],[345.3,1062.3],[376.0,1031.7],[408.6,999.1]],[[552.3,1322.9],[552.3,1279.2],[552.3,1235.6],[552.3,1191.9],[552.3,1148.1],[552.3,1104.7],[552.3,1058.6]],[[883.0,1185.9],[852.1,1155.0],[821.2,1124.2],[790.3,1093.3],[759.4,1062.3],[728.7,1031.7],[696.1,999.1]],[[1019.9,855.3],[976.2,855.3],[932.6,855.3],[888.9,855.3],[845.1,855.3],[801.7,855.3],[755.6,855.3]],[[883.0,524.7],[852.1,555.6],[821.2,586.4],[790.3,617.3],[759.4,648.3],[728.7,678.9],[696.1,711.5]]],"pas":[[[552.3,347.5,0.0,70.9,36.7],[552.3,387.7,0.0,70.9,42.5],[552.3,431.4,0.0,70.9,42.5],[552.3,475.0,0.0,70.9,42.5],[552.3,518.7,0.0,70.9,42.5],[552.3,562.5,0.0,70.9,42.5],[552.3,605.9,0.0,70.9,42.0],[552.3,652.0,0.0,70.9,48.0]],[[193.3,496.3,-45.0,70.9,36.7],[221.7,524.7,-45.0,70.9,42.5],[252.6,555.6,-45.0,70.9,42.5],[283.4,586.4,-45.0,70.9,42.5],[314.3,617.3,-45.0,70.9,42.5],[345.3,648.3,-45.0,70.9,42.5],[376.0,678.9,-45.0,70.9,42.0],[408.6,711.5,-45.0,70.9,48.0]],[[44.6,855.3,-90.0,70.9,36.7],[84.7,855.3,-90.0,70.9,42.5],[128.4,855.3,-90.0,70.9,42.5],[172.0,855.3,-90.0,70.9,42.5],[215.7,855.3,-90.0,70.9,42.5],[259.5,855.3,-90.0,70.9,42.5],[302.9,855.3,-90.0,70.9,42.0],[349.0,855.3,-90.0,70.9,48.0]],[[193.3,1214.3,-135.0,70.9,36.7],[221.7,1185.9,-135.0,70.9,42.5],[252.6,1155.0,-135.0,70.9,42.5],[283.4,1124.2,-135.0,70.9,42.5],[314.3,1093.3,-135.0,70.9,42.5],[345.3,1062.3,-135.0,70.9,42.5],[376.0,1031.7,-135.0,70.9,42.0],[408.6,999.1,-135.0,70.9,48.0]],[[552.3,1363.1,-180.0,70.9,36.7],[552.3,1322.9,-180.0,70.9,42.5],[552.3,1279.2,-180.0,70.9,42.5],[552.3,1235.6,-180.0,70.9,42.5],[552.3,1191.9,-180.0,70.9,42.5],[552.3,1148.1,-180.0,70.9,42.5],[552.3,1104.7,-180.0,70.9,42.0],[552.3,1058.6,-180.0,70.9,48.0]],[[911.4,1214.3,135.0,70.9,36.7],[883.0,1185.9,135.0,70.9,42.5],[852.1,1155.0,135.0,70.9,42.5],[821.2,1124.2,135.0,70.9,42.5],[790.3,1093.3,135.0,70.9,42.5],[759.4,1062.3,135.0,70.9,42.5],[728.7,1031.7,135.0,70.9,42.0],[696.1,999.1,135.0,70.9,48.0]],[[1060.1,855.3,90.0,70.9,36.7],[1019.9,855.3,90.0,70.9,42.5],[976.2,855.3,90.0,70.9,42.5],[932.6,855.3,90.0,70.9,42.5],[888.9,855.3,90.0,70.9,42.5],[845.1,855.3,90.0,70.9,42.5],[801.7,855.3,90.0,70.9,42.0],[755.6,855.3,90.0,70.9,48.0]],[[911.4,496.3,45.0,70.9,36.7],[883.0,524.7,45.0,70.9,42.5],[852.1,555.6,45.0,70.9,42.5],[821.2,586.4,45.0,70.9,42.5],[790.3,617.3,45.0,70.9,42.5],[759.4,648.3,45.0,70.9,42.5],[728.7,678.9,45.0,70.9,42.0],[696.1,711.5,45.0,70.9,48.0]]],"houses":[{"key":"trebol","name":"Reino del Tr\u00e9bol","anime":"Black Clover","color":"#5f0996","dark":"#2a0244","hx":380.1,"hy":440.8},{"key":"karakura","name":"Ciudad Karakura","anime":"Bleach","color":"#f4a531","dark":"#c67100","hx":140.1,"hy":679.8},{"key":"paradis","name":"Isla Paradis","anime":"Shingeki no Kyojin","color":"#55ff68","dark":"#009108","hx":138.4,"hy":1025.7},{"key":"shibuya","name":"Shibuya","anime":"Jujutsu Kaisen","color":"#0ceef4","dark":"#0b8484","hx":376.2,"hy":1275.4},{"key":"ostania","name":"Ostania y Westalis","anime":"Spy x Family","color":"#ff85f1","dark":"#cc00be","hx":724.7,"hy":1267.8},{"key":"yorknew","name":"York Shin City","anime":"Hunter x Hunter","color":"#0500cc","dark":"#1b0078","hx":975.7,"hy":1030.7},{"key":"konoha","name":"Konoha","anime":"Naruto","color":"#ebff34","dark":"#aab208","hx":966.5,"hy":684.5},{"key":"infinito","name":"Castillo Infinito","anime":"Demon Slayer","color":"#f30000","dark":"#8c0909","hx":724.8,"hy":441.9}],"center":[552.33,855.3],"arms":[90,135,180,225,270,315,0,45]};
+/* ===== MOTOR: parchís, 2 dados, sentido contrario a las manecillas ===== */
+const N=136, LL=132, MET=139; // 136 casillas; ruta: 132 del circuito (salida → punta propia), 7 del pasillo y la meta
+const S=hi=>(5+17*hi)%N;                    // casilla de salida de cada casa
+const isSafe=idx=>[0,5,12].includes(idx%17); // salidas y seguros
+const cell=p=>p.k<LL?'c'+((S(p.hi)+p.k)%N):'h'+p.hi+'.'+(p.k-LL);
+const at=(g,key)=>g.pc.filter(q=>q.st==='juego'&&cell(q)===key);
+const lg=(g,s)=>{g.log.push(s);if(g.log.length>40)g.log.shift();};
+const who=g=>g.pl[g.turn].name;
+const lastIn=o=>o.reduce((s,c)=>c.t>s.t?c:s);
+
+function newGame(sel){
+  const g={pl:sel,pc:[],turn:0,dice:[0,0],used:[true,true],dbl:false,dbls:0,bv:0,bq:[],last:null,clock:0,noBar:false,phase:'roll',log:[],win:null};
+  sel.forEach((p,pi)=>{for(let n=1;n<=4;n++)g.pc.push({p:pi,hi:p.hi,n,st:'casa',k:-1,t:0});});
+  lg(g,'Empieza '+sel[0].name+'. Para salir necesitas un 5 (o que los dos dados sumen 5).');return g;
+}
+function ev(g,p,v,bonus){
+  if(p.st==='casa'){
+    if(bonus||v!==5)return null;
+    const o=at(g,'c'+S(p.hi));
+    if(o.length<2)return {t:'sal',cap:[]};            // con una sola ficha en la salida conviven
+    if(o.every(q=>q.p===p.p))return null;               // dos propias: no cabe otra
+    return {t:'sal',cap:[lastIn(o.filter(q=>q.p!==p.p))]}; // casilla llena: se come a la rival (la última en llegar)
+  }
+  if(p.st!=='juego')return null;
+  const nk=p.k+v; if(nk>MET)return null;                // meta: número exacto
+  for(let j=p.k+1;j<=nk&&j<LL;j++){if(at(g,cell({hi:p.hi,k:j})).length>=2)return null;} // barrera: no se salta ni se cae en ella
+  let cap=[];
+  if(nk<LL){const key=cell({hi:p.hi,k:nk}),o=at(g,key);
+    if(g.noBar&&o.length===1&&o[0].p===p.p)return null; // en esta tirada ya se rompió una barrera: no se vuelve a formar
+    if(o.length===1&&o[0].p!==p.p&&!isSafe(+key.slice(1)))cap=[o[0]];}
+  return {t:'mov',nk,cap};
+}
+function legalD(g){
+  const L=[],seen=new Set(),mine=g.pc.filter(p=>p.p===g.turn);
+  [0,1].forEach(d=>{
+    if(g.used[d])return;const v=g.dice[d];if(seen.has(v))return;seen.add(v);
+    mine.forEach(p=>{const m=ev(g,p,v,false);if(m)L.push({d,v,p,m});});
+  });
+  if(!g.used[0]&&!g.used[1]&&g.dice[0]+g.dice[1]===5) // los dos dados suman 5: también se sale
+    mine.forEach(p=>{const m=ev(g,p,5,false);if(m)L.push({d:-2,v:5,p,m,sum:true});});
+  const ex=L.filter(x=>x.m.t==='sal');if(ex.length)return ex;                     // salir es obligatorio
+  if(g.dbl){const bl=L.filter(x=>x.p.st==='juego'&&x.p.k<LL&&at(g,cell(x.p)).length===2);if(bl.length)return bl;} // con un par se rompe la barrera
+  return L;
+}
+function legalB(g,v){const L=[];g.pc.forEach(p=>{if(p.p!==g.turn)return;const m=ev(g,p,v,true);if(m)L.push({d:-1,v,p,m});});return L;}
+const legal=g=>g.phase==='bonus'?legalB(g,g.bv):legalD(g);
+const jail=(g,q)=>{q.st='casa';q.k=-1;};
+function apply(g,x){
+  const {p,m}=x,n=who(g);
+  const wasBar=p.st==='juego'&&p.k<LL&&(()=>{const o=at(g,cell(p));return o.length===2&&o.every(q=>q.p===p.p);})();
+  if(x.d===-2)g.used=[true,true];else if(x.d>=0)g.used[x.d]=true;
+  if(m.t==='sal'){p.st='juego';p.k=0;p.t=++g.clock;lg(g,n+' saca una ficha.');}
+  else{p.k=m.nk;p.t=++g.clock;if(p.k===MET){p.st='meta';g.bq.push(10);lg(g,n+' mete una ficha en la meta. ¡Premio de 10!');}}
+  if(m.cap.length){m.cap.forEach(q=>jail(g,q));g.bq.push(20);lg(g,n+' se come una ficha de '+g.pl[m.cap[0].p].name+'. ¡Premio de 20!');}
+  if(wasBar)g.noBar=true;
+  g.last=p;
+  if(g.pc.every(q=>q.p!==g.turn||q.st==='meta')){g.win=g.turn;g.phase='over';lg(g,'¡'+n+' ganó la partida!');return;}
+  settle(g);
+}
+function settle(g){
+  if(g.win!==null)return g.phase='over';
+  while(g.bq.length){const b=g.bq.shift();
+    if(legalB(g,b).length){g.bv=b;g.phase='bonus';return g.phase;}
+    lg(g,'Premio de '+b+' perdido: ninguna ficha puede avanzar tanto.');}
+  if(!g.used[0]||!g.used[1]){if(legalD(g).length){g.phase='move';return g.phase;}g.used=[true,true];}
+  if(g.dbl){g.dbl=false;g.phase='roll';lg(g,who(g)+' sacó doble: tira otra vez.');return g.phase;}
+  return nextTurn(g);
+}
+function nextTurn(g){g.turn=(g.turn+1)%g.pl.length;g.dbls=0;g.dbl=false;g.noBar=false;g.last=null;g.bq=[];g.used=[true,true];g.phase='roll';lg(g,'Turno de '+who(g)+'.');return g.phase;}
+function roll(g,r=Math.random){
+  const a=1+Math.floor(r()*6),b=1+Math.floor(r()*6),n=who(g);
+  g.dice=[a,b];g.used=[false,false];g.dbl=a===b;g.noBar=false;
+  lg(g,n+' sacó '+a+' y '+b+(g.dbl?' (doble)':'')+'.');
+  if(g.dbl&&++g.dbls>=3){
+    const q=g.last;
+    if(q&&q.st==='juego'&&q.k<LL){jail(g,q);lg(g,'Tres dobles seguidos: la última ficha que movió '+n+' vuelve a casa.');}
+    else lg(g,'Tres dobles seguidos: '+n+' pierde el turno.');
+    nextTurn(g);return;}
+  const play=g.pc.some(q=>q.p===g.turn&&q.st==='juego');
+  if(!play&&!legalD(g).length){ // sin fichas afuera y sin poder salir: un solo intento
+    g.used=[true,true];
+    if(g.dbl){g.dbl=false;g.phase='roll';lg(g,n+' no pudo salir, pero sacó doble: tira otra vez.');return;}
+    lg(g,n+' no sacó 5. Pasa el turno.');nextTurn(g);return;}
+  g.phase=legalD(g).length?'move':'stuck';
+  if(g.phase==='stuck')lg(g,n+' no puede mover.');
+}
+function skip(g){if(g.phase==='stuck')settle(g);}
+if(typeof module!=='undefined')module.exports={newGame,roll,legal,legalD,apply,skip,cell,at,ev,N,LL,MET,S};
+
+/* ===== INTERFAZ ===== */
+const $=s=>document.querySelector(s),NSV='http://www.w3.org/2000/svg';
+const svg=$('#tab'),CX=D.center[0],CY=D.center[1];
+const el=(n,a,p)=>{const e=document.createElementNS(NSV,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+let g=null,busy=false,OK=new Set();
+const SL=[[-34,-31],[34,-31],[-34,33],[34,33]];
+const rgb=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
+const mix=(a,b,t)=>{const A=rgb(a),B=rgb(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('');};
+/* iconos de fichas: img/icono_<casa>.png (uno por casa) o img/icono_<casa>_<1-4>.png (uno por ficha) */
+const URLS=D.houses.flatMap(h=>['icono_'+h.key,...[1,2,3,4].map(n=>'icono_'+h.key+'_'+n)]);
+const chk=u=>new Promise(r=>{const i=new Image();i.onload=()=>{OK.add(u);r()};i.onerror=r;i.src='img/'+u+'.png';});
+const icon=p=>{const a='icono_'+D.houses[p.hi].key+'_'+p.n,b='icono_'+D.houses[p.hi].key;return OK.has(a)?{u:a,own:1}:OK.has(b)?{u:b,own:0}:null;};
+
+function prep(){
+  const ov=el('g',{id:'ov','pointer-events':'none'},svg); // pasillo de cada casa pintado de su color oscuro
+  D.pas.forEach((rows,h)=>rows.forEach(r=>el('rect',{x:-r[3]/2,y:-r[4]/2,width:r[3],height:r[4],transform:'translate('+r[0]+' '+r[1]+') rotate('+r[2]+')',fill:D.houses[h].dark,stroke:'#000','stroke-width':.66},ov)));
+  const lab=el('g',{id:'lab','pointer-events':'none','font-family':'Arial,sans-serif','font-weight':'700','text-anchor':'middle','paint-order':'stroke',stroke:'#fff','stroke-width':3,fill:'#111'},svg);
+  D.cells.forEach(c=>{
+    const gg=el('g',{transform:'rotate('+c[2]+' '+c[0]+' '+c[1]+')'},lab);
+    el('text',{x:c[0],y:c[1]+(c[3]?-3:5),'font-size':c[3]?15:17},gg).textContent=c[4];
+    if(c[3])el('text',{x:c[0],y:c[1]+12,'font-size':11,'stroke-width':2.5},gg).textContent=c[3]===2?'SALIDA':'SEGURO';
+  });
+  /* efectos de las fichas: sombra, contorno claro del icono, textura y degradado por casa */
+  const df=el('defs',{},svg);
+  const f1=el('filter',{id:'fBlur',x:'-40%',y:'-40%',width:'180%',height:'180%'},df);el('feGaussianBlur',{stdDeviation:2.4},f1);
+  const f2=el('filter',{id:'fIcon',x:'-30%',y:'-30%',width:'170%',height:'170%'},df);
+  el('feMorphology',{in:'SourceAlpha',operator:'dilate',radius:1.4,result:'dil'},f2);
+  el('feFlood',{'flood-color':'#fff','flood-opacity':.95,result:'wh'},f2);
+  el('feComposite',{in:'wh',in2:'dil',operator:'in',result:'out'},f2);
+  el('feGaussianBlur',{in:'SourceAlpha',stdDeviation:1.6,result:'bl'},f2);
+  el('feOffset',{in:'bl',dx:2.5,dy:3.5,result:'of'},f2);
+  el('feFlood',{'flood-color':'#000','flood-opacity':.6,result:'bk'},f2);
+  el('feComposite',{in:'bk',in2:'of',operator:'in',result:'sh'},f2);
+  const mg=el('feMerge',{},f2);['sh','out','SourceGraphic'].forEach(i=>el('feMergeNode',{in:i},mg));
+  const pt=el('pattern',{id:'tex',width:5,height:5,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},df);el('rect',{width:5,height:1.6,fill:'#fff','fill-opacity':.1},pt);
+  const gw=el('radialGradient',{id:'gw',cx:.35,cy:.3,r:.95},df);[[0,'#ffffff'],[.7,'#f2f2f2'],[1,'#c9c9d2']].forEach(s=>el('stop',{offset:s[0],'stop-color':s[1]},gw));
+  D.houses.forEach((h,i)=>{const gr=el('radialGradient',{id:'gb'+i,cx:.35,cy:.3,r:.95},df);
+    [[0,tone(h.color,-.1,.12)],[.6,tone(h.color,-.22,.12)],[1,tone(h.color,-.34,.12)]].forEach(s=>el('stop',{offset:s[0],'stop-color':s[1]},gr));});
+  el('g',{id:'tk'},svg);
+}
+function pos(p){
+  const h=D.houses[p.hi];
+  if(p.st==='casa'){const s=SL[p.n-1];return [h.hx+s[0],h.hy+s[1]];}
+  if(p.st==='meta'){const a=D.arms[p.hi]*Math.PI/180,o=(p.n-2.5)*34;return [CX+95*Math.cos(a)-o*Math.sin(a),CY-95*Math.sin(a)-o*Math.cos(a)];}
+  const k=cell(p),c=k[0]==='c'?D.cells[+k.slice(1)]:D.home[p.hi][+k.split('.')[1]];return [c[0],c[1]];
+}
+const active=()=>!busy&&g.phase!=='over'&&(g.phase==='move'||g.phase==='bonus');
+const mvOf=p=>active()?legal(g).filter(x=>x.p===p):[];
+const hslOf=c=>{const [r,g,b]=rgb(c).map(v=>v/255),mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;
+  if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60;}return [h,s,l];};
+const hexOf=(h,s,l)=>{const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0');};return '#'+f(0)+f(8)+f(4);};
+/* color de la ficha: el de la casa pero más oscuro y saturado, para que no se confunda con la casilla */
+const tone=(c,dl,ds)=>{const [h,s,l]=hslOf(c);return hexOf(h,Math.min(1,Math.max(0,s+ds)),Math.min(.9,Math.max(.1,l+dl)));};
+function token(parent,p,x,y,r,mv){
+  const h=D.houses[p.hi],ic=icon(p),e=el('g',{class:'tk'+(mv?' mv':'')},parent),ri=r-r*.27;
+  el('circle',{cx:x,cy:y,r:r+10,fill:'none','pointer-events':'all'},e); // zona táctil más grande
+  el('ellipse',{cx:x+1,cy:y+r*.86,rx:r*.95,ry:r*.4,fill:'#000','fill-opacity':.5,filter:'url(#fBlur)'},e);
+  el('circle',{cx:x,cy:y+r*.16,r,fill:'#2a2233'},e);                                   // canto (grosor)
+  el('circle',{class:'top',cx:x,cy:y,r,fill:'url(#gw)',stroke:'#1a1422','stroke-width':1.8},e); // borde blanco grande
+  el('circle',{cx:x,cy:y,r:ri,fill:'url(#gb'+p.hi+')',stroke:'#00000055','stroke-width':1.2},e); // interior de color
+  el('circle',{cx:x,cy:y,r:ri-1,fill:'url(#tex)','pointer-events':'none'},e);          // textura
+  el('ellipse',{cx:x-ri*.3,cy:y-ri*.5,rx:ri*.5,ry:ri*.2,fill:'#fff','fill-opacity':.25,transform:'rotate(-25 '+x+' '+y+')','pointer-events':'none'},e); // brillo
+  if(ic){const s=ri*2.1;el('image',{href:'img/'+ic.u+'.png',x:x-s/2,y:y-s/2-ri*.08,width:s,height:s,filter:'url(#fIcon)','pointer-events':'none',preserveAspectRatio:'xMidYMid meet'},e);}
+  else el('text',{x,y:y+ri*.38,'text-anchor':'middle','font-size':ri*1.15,'font-weight':800,fill:'#fff',stroke:'#000','stroke-width':3,'paint-order':'stroke','pointer-events':'none'},e).textContent=p.n;
+  if(ic&&!ic.own){el('circle',{cx:x+r*.66,cy:y+r*.66,r:r*.3,fill:'#111',stroke:'#fff','stroke-width':1.5,'pointer-events':'none'},e);el('text',{x:x+r*.66,y:y+r*.66+r*.11,'text-anchor':'middle','font-size':r*.38,'font-weight':800,fill:'#fff','pointer-events':'none'},e).textContent=p.n;}
+  el('circle',{class:'hl',cx:x,cy:y,r:r+3.5,fill:'none',stroke:'#ffd400','stroke-width':4.5,'pointer-events':'none'},e); // resalte de ficha movible
+  return e;
+}
+const slotAng=p=>{const k=cell(p);return (k[0]==='c'?D.cells[+k.slice(1)][2]:D.pas[p.hi][0][2])*Math.PI/180;};
+function draw(){
+  const tk=$('#tk');tk.innerHTML='';
+  const mv=active()?legal(g):[],by={};
+  g.pc.forEach(p=>{if(p.st==='juego'){const k=cell(p);(by[k]=by[k]||[]).push(p);}});
+  const cur=D.houses[g.pl[g.turn].hi];
+  if(g.phase!=='over')el('circle',{cx:cur.hx,cy:cur.hy,r:80,fill:'none',stroke:'#ffd400','stroke-width':6,'stroke-dasharray':'10 6','pointer-events':'none'},tk);
+  g.pl.forEach(q=>{const h=D.houses[q.hi];el('text',{x:h.hx,y:h.hy-62,'text-anchor':'middle','font-size':20,'font-weight':700,fill:'#fff','paint-order':'stroke',stroke:'#000','stroke-width':5,'pointer-events':'none'},tk).textContent=q.name;});
+  const order=[...g.pc].sort((a,b)=>pos(a)[1]-pos(b)[1]);
+  order.forEach(p=>{
+    let [x,y]=pos(p),r=25*KS(),gp=p.st==='juego'?by[cell(p)]:null;
+    if(gp&&gp.length>1){const n=gp.length,a=slotAng(p),off=(gp.indexOf(p)-(n-1)/2)*(n===2?40:26)*KS();x+=Math.cos(a)*off;y+=Math.sin(a)*off;r*=n===2?.76:.6;}
+    const e=token(tk,p,x,y,r,mv.some(m=>m.p===p));
+    e.onclick=ev=>{ev.stopPropagation();pick(p);};
+    e.onmouseenter=()=>showTip(p,x,y);e.onmouseleave=hideTip;
+  });
+}
+/* destino y etiqueta de cada opción */
+const dest=(p,x)=>x.m.t==='sal'?0:x.m.nk===MET?'Meta':x.m.nk>=LL?'Pasillo '+(x.m.nk-LL+1):D.cells[(S(p.hi)+x.m.nk)%N][4];
+function pvAt(p,x){
+  rmPv();const t=x.m.t==='sal'?{st:'juego',hi:p.hi,k:0}:{st:x.m.nk===MET?'meta':'juego',hi:p.hi,k:x.m.nk,n:p.n};
+  const [px,py]=pos(t);el('circle',{id:'pv',cx:px,cy:py,r:24,fill:'none',stroke:'#ffd400','stroke-width':5,'stroke-dasharray':'6 4','pointer-events':'none'},$('#tk'));
+}
+function rmPv(){const o=$('#pv');if(o)o.remove();}
+function closePop(){$('#pop').style.display='none';rmPv();}
+/* tooltip: imagen grande de la ficha */
+let tipT=0;
+const KS=()=>Math.min(1.25,Math.max(1,620/($('#bd').clientWidth||800)));
+function scr(x,y){const pt=svg.createSVGPoint();pt.x=x;pt.y=y;const s=pt.matrixTransform(svg.getScreenCTM()),br=$('#bd').getBoundingClientRect();return [s.x-br.left,s.y-br.top];}
+function showTip(p,x,y,ms){
+  if($('#pop').style.display==='flex'||busy)return;
+  clearTimeout(tipT);const h=D.houses[p.hi],ic=icon(p),tp=$('#tip'),[sx,sy]=scr(x,y);
+  tp.style.setProperty('--c',h.color);tp.className=sy<190?'below':'';
+  tp.innerHTML='<div class="im">'+(ic?'<img src="img/'+ic.u+'.png">':'<b>'+p.n+'</b>')+'</div><b>'+g.pl[p.p].name+'</b><br>'+h.name+' · ficha '+p.n;
+  tp.style.left=sx+'px';tp.style.top=sy+'px';tp.style.display='block';
+  if(ms)tipT=setTimeout(hideTip,ms);
+}
+function hideTip(){$('#tip').style.display='none';}
+function openPop(p,opts){
+  const [x,y]=pos(p),pt=svg.createSVGPoint();pt.x=x;pt.y=y;
+  const s=pt.matrixTransform(svg.getScreenCTM()),br=$('#bd').getBoundingClientRect(),pp=$('#pop');
+  pp.innerHTML='';pp.className=(s.y-br.top<110)?'below':'';
+  opts.forEach(o=>{
+    const b=document.createElement('button'),d=dest(p,o);
+    b.innerHTML='<b>'+(o.m.t==='sal'?(o.sum?'3+2':'5'):o.v)+'</b><small>'+(o.m.t==='sal'?'Sacar':'→ '+d)+(o.m.cap.length?' ⚔':'')+'</small>';
+    b.onclick=e=>{e.stopPropagation();closePop();apply(g,o);ui();};
+    b.onmouseenter=()=>pvAt(p,o);b.onmouseleave=rmPv;pp.appendChild(b);
+  });
+  pp.style.left=(s.x-br.left)+'px';pp.style.top=(s.y-br.top)+'px';pp.style.display='flex';
+}
+function pick(p){
+  if(!active()){showTip(p,...pos(p),2500);return;}
+  closePop();const m=mvOf(p);if(!m.length){showTip(p,...pos(p),2500);return;}
+  if(m.length===1){apply(g,m[0]);ui();}else openPop(p,m);
+}
+/* dados */
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const face=(e,v)=>e.querySelectorAll('i').forEach((i,k)=>i.className=PIPS[v].includes(k)?'on':'');
+function spin(vals){
+  busy=true;const ds=[$('#d0'),$('#d1')];
+  ds.forEach((e,i)=>{e.classList.remove('used');e.style.animationDelay=i*70+'ms';e.classList.add('rolling');});
+  const iv=setInterval(()=>ds.forEach(e=>face(e,1+Math.floor(Math.random()*6))),75);
+  setTimeout(()=>{clearInterval(iv);ds.forEach((e,i)=>{e.classList.remove('rolling');face(e,vals[i]);});busy=false;ui();},800);
+}
+function doRoll(){
+  if(busy||g.phase==='over')return;
+  if(g.phase==='stuck'){skip(g);ui();return;}
+  if(g.phase!=='roll')return;
+  closePop();roll(g);spin(g.dice.slice());ui();
+}
+function ui(){
+  closePop();hideTip();
+  const q=g.pl[g.turn],h=D.houses[q.hi],bo=g.phase==='bonus';
+  $('#turno').innerHTML='<span class="dot" style="background:'+h.color+'"></span><b>'+q.name+'</b><small>'+h.name+' · '+h.anime+'</small>';
+  $('#dice').style.setProperty('--c',h.color);
+  if(!busy)[0,1].forEach(d=>{const e=$('#d'+d);face(e,g.dice[d]||(d?3:4));e.classList.toggle('used',!g.used[d]===false||!g.dice[d]);});
+  $('#extra').textContent=bo?'🎁 Premio: mueve una ficha '+g.bv+' casillas':'';
+  const rb=$('#roll');rb.disabled=busy||!(g.phase==='roll'||g.phase==='stuck');
+  rb.textContent=g.phase==='stuck'?'Sin jugadas · continuar':'Lanzar dados';
+  if(g.phase==='over'&&!busy){$('#fin').style.display='flex';$('#finTxt').textContent='🏆 ¡'+g.pl[g.win].name+' ganó con '+h.name+'!';}
+  const L=active()?legal(g):[];
+  $('#msg').textContent=busy?'Lanzando…':g.phase==='roll'?'Es tu turno, '+q.name+': lanza los dados.'
+    :bo?'¡Premio! Toca la ficha resaltada que quieres mover.'
+    :g.phase==='move'?(L.some(x=>x.m.t==='sal')?'Sacaste un 5: toca una ficha de tu casa para sacarla.':L.some(x=>x.m.cap.length)?'Puedes comer: toca la ficha resaltada que prefieras.':'Toca la ficha que quieres mover.'):'';
+  $('#log').innerHTML=g.log.slice(-8).reverse().map(s=>'<div>'+s+'</div>').join('');
+  draw();
+}
+$('#roll').onclick=doRoll;$('#dice').onclick=doRoll;
+document.addEventListener('click',e=>{if(!e.target.closest('#pop'))closePop();});
+$('#home').onclick=()=>{if(confirm('¿Reiniciar el juego y volver al inicio?')){closePop();$('#fin').style.display='none';$('#setup').style.display='flex';}};
+function rows(){
+  const n=+$('#np').value,box=$('#rows');box.innerHTML='';
+  for(let i=0;i<n;i++)box.insertAdjacentHTML('beforeend','<div class="row"><input maxlength="14" placeholder="Jugador '+(i+1)+'" id="nm'+i+'"><select id="hs'+i+'">'+D.houses.map((h,k)=>'<option value="'+k+'"'+(k===i?' selected':'')+'>'+h.name+' ('+h.anime+')</option>').join('')+'</select></div>');
+}
+function start(){
+  const n=+$('#np').value,hs=[],pl=[];
+  for(let i=0;i<n;i++){const hi=+$('#hs'+i).value;if(hs.includes(hi)){$('#err').textContent='Cada jugador debe escoger una casa distinta.';return;}hs.push(hi);pl.push({name:$('#nm'+i).value.trim()||'Jugador '+(i+1),hi});}
+  $('#err').textContent='';pl.sort((a,b)=>a.hi-b.hi);g=newGame(pl);busy=false;$('#setup').style.display='none';ui();
+}
+$('#np').innerHTML=[2,3,4,5,6,7,8].map(n=>'<option>'+n+'</option>').join('');$('#np').value=4;
+$('#np').onchange=rows;$('#go').onclick=start;$('#again').onclick=()=>{$('#fin').style.display='none';$('#setup').style.display='flex';};
+addEventListener('resize',()=>{if(g)draw();});
+chk('favicon').then(()=>{if(!OK.has('favicon'))$('#fav').href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>";});
+Promise.all(URLS.map(chk)).then(()=>{prep();[0,1].forEach(d=>{const e=$('#d'+d);e.innerHTML='<i></i>'.repeat(9);face(e,d?3:4);});rows();$('#setup').style.display='flex';});
+
+</script></body></html>
