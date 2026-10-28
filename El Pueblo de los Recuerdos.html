@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>El Pueblo de los Recuerdos</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e3f1f4;--card:#fff;--ink:#1d2b2e;--soft:#4a5d61;--teal:#0f5c63;--sun:#f2b632;--leaf:#2f7d4f;--line:#b9d3d8;--fs:21px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10262a;--card:#17363b;--ink:#f1f7f7;--soft:#b5cdd0;--teal:#7fd1d8;--sun:#f2b632;--leaf:#7fd39b;--line:#2b5359}}
+:root[data-theme="dark"]{--bg:#10262a;--card:#17363b;--ink:#f1f7f7;--soft:#b5cdd0;--teal:#7fd1d8;--sun:#f2b632;--leaf:#7fd39b;--line:#2b5359}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--fs)/1.5 "Atkinson Hyperlegible",Verdana,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:4px solid var(--sun);outline-offset:2px}
+.top{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.mini{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px 14px;min-height:48px}
+.help{background:#c2410c;color:#fff;border:0;font-weight:700}
+.lia{display:flex;gap:12px;align-items:flex-start;margin:14px 0}
+.avatar{flex:none;width:76px;height:76px;border-radius:50%;background:var(--sun);display:grid;place-items:center;font-size:44px;border:4px solid var(--card)}
+.bubble{background:var(--card);border:2px solid var(--line);border-radius:6px 22px 22px 22px;padding:12px 16px;flex:1}
+.bubble b{color:var(--teal)}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+nav button{background:var(--card);border:3px solid var(--line);border-radius:16px;min-height:72px;padding:8px 4px;font-weight:700;line-height:1.2}
+nav button[aria-current="true"]{border-color:var(--teal);background:var(--teal);color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) nav button[aria-current="true"]{color:#10262a}}
+.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+h1{font-size:1.5em;margin:0 0 6px;color:var(--teal)}
+h2{font-size:1.25em;margin:0 0 8px}
+p{margin:0 0 10px}
+.small{font-size:.8em;color:var(--soft)}
+.big{display:block;width:100%;min-height:68px;border-radius:16px;border:3px solid var(--teal);background:var(--card);padding:10px 16px;text-align:left;margin-bottom:10px;font-weight:700}
+.big.on{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.go{background:var(--teal);color:#fff;border-color:var(--teal);text-align:center}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .go{color:#10262a}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.tile{min-height:104px;font-size:2.4em;border-radius:18px;border:3px solid var(--line);background:var(--card);display:grid;place-items:center;gap:0}
+.tile span{font-size:.4em;font-weight:700}
+.tile.sel{border-color:var(--sun);background:#fff3cf;box-shadow:0 0 0 4px var(--sun)}
+.tile.ok{border-color:var(--leaf)}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
+textarea,input[type=text],input[type=tel]{width:100%;font:inherit;padding:12px;border-radius:14px;border:3px solid var(--line);background:var(--card);color:var(--ink)}
+.town{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;font-size:1.7em;text-align:center;background:linear-gradient(#bfe3ee 0 45%,#cfe8b5 45%);border-radius:18px;padding:10px;min-height:190px;align-content:end}
+.stepdone{background:#e2f3e8;color:#16402a;border-radius:12px;padding:8px 14px;margin-bottom:6px;font-weight:700}
+dialog{border:4px solid var(--teal);border-radius:22px;background:var(--card);color:var(--ink);max-width:92vw;width:520px;font-size:var(--fs)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+a.big{text-decoration:none;color:#fff;background:#c2410c;border-color:#c2410c;text-align:center}
+@media (prefers-reduced-motion:no-preference){.avatar{animation:bob 4s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-4px)}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top">
+  <button class="mini" id="vozBtn" aria-pressed="true">🔊 Voz: sí</button>
+  <button class="mini" id="szBtn">🔎 Letra más grande</button>
+  <button class="mini help" id="helpBtn">🆘 Necesito ayuda</button>
+ </div>
+ <div class="lia"><div class="avatar" aria-hidden="true">🧓</div><div class="bubble" id="lia" aria-live="polite"></div></div>
+ <nav id="nav"></nav>
+ <main id="main"></main>
+ <p class="small">Este juego es compañía y estimulación. No es un examen ni da diagnósticos. Si algo le preocupa, hable con su médico.</p>
+</div>
+<dialog id="dlg"><h2>Pedir ayuda</h2><div id="dlgBody"></div><button class="big" id="dlgClose">Cerrar</button></dialog>
+
+<script>
+var S, KEY='pueblo-v1';
+var today=function(){return new Date().toISOString().slice(0,10)};
+var DEF={name:'',vozOn:true,big:false,phone:'',start:today(),flowers:0,lv:{m:1,c:1},streak:{m:0,c:0},days:{},mem:[],ri:0};
+function load(){try{var r=localStorage.getItem(KEY);S=r?Object.assign({},DEF,JSON.parse(r)):JSON.parse(JSON.stringify(DEF))}catch(e){S=JSON.parse(JSON.stringify(DEF))}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function day(){var d=today();if(!S.days[d])S.days[d]={checks:[],mood:'',games:0};return S.days[d]}
+function $(s){return document.querySelector(s)}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function say(t){$('#lia').innerHTML=t;if(S.vozOn&&window.speechSynthesis){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,''));u.lang='es-CO';u.rate=.85;speechSynthesis.speak(u)}catch(e){}}}
+function flower(n){S.flowers+=n;save()}
+function name(){return S.name||'amigo'}
+
+var TABS=[['dia','☀️','Mi día'],['mercado','🧺','El mercado'],['cocina','🍳','La cocina'],['recuerdos','📖','Mis recuerdos'],['pueblo','🏡','Mi pueblo'],['familia','👪','Mi familia']];
+var cur='dia';
+function go(t){cur=t;nav();view()}
+function nav(){$('#nav').innerHTML=TABS.map(function(t){return '<button data-t="'+t[0]+'"'+(t[0]===cur?' aria-current="true"':'')+'><span aria-hidden="true">'+t[1]+'</span><br>'+t[2]+'</button>'}).join('');
+ document.querySelectorAll('#nav button').forEach(function(b){b.onclick=function(){go(b.dataset.t)}})}
+function view(){var f={dia:vDia,mercado:vMercado,cocina:vCocina,recuerdos:vRec,pueblo:vPueblo,familia:vFam}[cur];f()}
+
+/* Bienvenida */
+function welcome(){
+ $('#nav').innerHTML='';
+ $('#main').innerHTML='<div class="card"><h1>Bienvenido al Pueblo de los Recuerdos</h1><p>Aquí usted es el alcalde o la alcaldesa. No hay vidas, ni tiempo, ni “perdió”. Yo me llamo Lía y le voy a acompañar.</p><label for="nm"><b>¿Cómo le gusta que le llamemos?</b></label><input type="text" id="nm" autocomplete="off"><p class="small" style="margin-top:10px">Lo que usted escriba se queda solo en este celular. Puede borrarlo cuando quiera en la sección “Mi familia”.</p><button class="big go" id="ok">Empezar</button></div>';
+ say('Hola, soy <b>Lía</b>, su compañera en el pueblo. ¿Cómo le gusta que le llamemos?');
+ $('#ok').onclick=function(){S.name=($('#nm').value||'').trim()||'amigo';save();go('dia')};
+}
+
+/* Mi día: cuidados */
+var CHECKS=['💧 Tomé agua','🍽️ Desayuné o almorcé','🚶 Me moví un rato','💊 Tomé mis medicinas como me indicó mi médico','📞 Hablé con alguien querido','😴 Dormí lo que necesitaba'];
+function vDia(){
+ var d=day(),h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches';
+ var done=d.checks.length;
+ $('#main').innerHTML='<div class="card"><h1>Mi día</h1><p>Toque lo que ya hizo hoy. Si algo no pudo, no pasa nada.</p>'+
+ CHECKS.map(function(c,i){return '<button class="big'+(d.checks.indexOf(i)>-1?' on':'')+'" data-i="'+i+'" aria-pressed="'+(d.checks.indexOf(i)>-1)+'">'+(d.checks.indexOf(i)>-1?'✔ ':'')+c+'</button>'}).join('')+
+ '</div><div class="card"><h2>¿Cómo se siente hoy?</h2><div class="row">'+
+ [['😊','Bien'],['😐','Regular'],['😔','Decaído']].map(function(m){return '<button class="big'+(d.mood===m[1]?' on':'')+'" data-m="'+m[1]+'" style="text-align:center">'+m[0]+' '+m[1]+'</button>'}).join('')+'</div></div>';
+ document.querySelectorAll('[data-i]').forEach(function(b){b.onclick=function(){var i=+b.dataset.i,k=d.checks.indexOf(i);if(k>-1)d.checks.splice(k,1);else{d.checks.push(i);flower(1);say('¡Muy bien, '+name()+'! Ya van '+d.checks.length+' cosas de cuidado hoy. Le sembré una flor en el pueblo.')}save();vDia()}});
+ document.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){d.mood=b.dataset.m;save();
+  say(d.mood==='Bien'?'Qué alegría, '+name()+'. Aproveche para contarle a alguien lo que le hace sentir bien.':d.mood==='Regular'?'Gracias por contarme. Quizás un juego tranquilo o una llamada a alguien querido le caiga bien.':'Gracias por decírmelo, '+name()+'. Hoy no hace falta ningún reto. ¿Quiere llamar a alguien de confianza? Estoy aquí con usted.');vDia()}});
+ if(!d.__said){d.__said=1;say(sal+', <b>'+name()+'</b>. Cuénteme cómo va su día. Recuerde tomar agua y moverse un ratico.')}
+}
+
+/* Mercado: memoria de trabajo */
+var FRU=['🍎','🍌','🥕','🌽','🥛','🍞','🧀','🍅','🥚','🍊','🍇','🥔'];
+var M=null;
+function vMercado(){
+ if(!M||M.fin){var n=S.lv.m+1;var t=shuffle(FRU).slice(0,n);var rest=FRU.filter(function(x){return t.indexOf(x)<0});M={t:t,opts:shuffle(t.concat(shuffle(rest).slice(0,6-n+2))),sel:[],fase:'ver'};}
+ if(M.fase==='ver'){
+  $('#main').innerHTML='<div class="card"><h1>El mercado</h1><p>Doña Rosa le encarga estas cosas. Míralas con calma. Cuando esté listo, toque el botón.</p><div class="grid">'+M.t.map(function(x){return '<div class="tile">'+x+'</div>'}).join('')+'</div></div><button class="big go" id="rdy" style="text-align:center">Ya las memoricé</button>';
+  say('Doña Rosa le encarga '+M.t.length+' cosas. Míralas con calma y toque el botón cuando esté listo.');
+  $('#rdy').onclick=function(){M.fase='elegir';vMercado()};
+ }else if(M.fase==='elegir'){
+  $('#main').innerHTML='<div class="card"><h1>¿Qué le encargó Doña Rosa?</h1><p>Toque las '+M.t.length+' cosas que recuerda.</p><div class="grid">'+M.opts.map(function(x){return '<button class="tile'+(M.sel.indexOf(x)>-1?' sel':'')+'" data-x="'+x+'" aria-pressed="'+(M.sel.indexOf(x)>-1)+'">'+x+'</button>'}).join('')+'</div></div><div class="row"><button class="big" id="pista" style="text-align:center">💡 Una pista</button><button class="big go" id="lis" style="text-align:center">Listo</button></div>';
+  document.querySelectorAll('[data-x]').forEach(function(b){b.onclick=function(){var k=M.sel.indexOf(b.dataset.x);if(k>-1)M.sel.splice(k,1);else M.sel.push(b.dataset.x);vMercado()}});
+  $('#pista').onclick=function(){say('Una pista: una de las cosas es '+(['una fruta','algo del desayuno','algo de la huerta'][Math.floor(Math.random()*3)])+'. Tómese su tiempo.')};
+  $('#lis').onclick=function(){M.fase='fin';var ok=M.sel.filter(function(x){return M.t.indexOf(x)>-1}).length;M.ok=ok;adapt('m',ok===M.t.length);day().games++;flower(ok===M.t.length?2:1);save();vMercado()};
+ }else{
+  var all=M.ok===M.t.length;
+  $('#main').innerHTML='<div class="card"><h1>'+(all?'¡Qué buena atención!':'¡Buen intento!')+'</h1><p>'+(all?'Recordó todo lo que le encargó Doña Rosa.':'Recordó '+M.ok+' de '+M.t.length+'. Eran:')+'</p><div class="grid">'+M.t.map(function(x){return '<div class="tile ok">'+x+'</div>'}).join('')+'</div><p style="margin-top:12px">Le sembré una flor en el pueblo. Cuénteselo a alguien hoy.</p></div><div class="row"><button class="big go" id="otra" style="text-align:center">Otro encargo</button><button class="big" id="fin" style="text-align:center">Terminar por hoy</button></div>';
+  say(all?'¡Qué buena atención, '+name()+'! Recordó todo.':'¡Buen intento, '+name()+'! Casi todos. Probemos otro cuando quiera.');
+  $('#otra').onclick=function(){M=null;vMercado()};$('#fin').onclick=function(){M=null;go('dia');say('Terminamos por hoy. ¿Se lo comparte a alguien?')};
+ }
+}
+/* Dificultad silenciosa: sube con 2 aciertos seguidos, baja con 2 fallos, entre 1 y 4 */
+function adapt(k,ok){var s=S.streak[k];S.streak[k]=ok?(s>0?s+1:1):(s<0?s-1:-1);if(S.streak[k]>=2&&S.lv[k]<4){S.lv[k]++;S.streak[k]=0}if(S.streak[k]<=-2&&S.lv[k]>1){S.lv[k]--;S.streak[k]=0}}
+
+/* Cocina: función ejecutiva */
+var REC=[{n:'Hacer una arepa',s:['Calentar el sartén','Poner la masa en el sartén','Voltear la arepa','Servirla con quesito']},{n:'Preparar un tinto',s:['Hervir el agua','Poner el café en el filtro','Echar el agua caliente','Servir en la taza']},{n:'Preparar una agüepanela',s:['Poner agua a hervir','Agregar la panela','Revolver hasta que se disuelva','Servir con limón']}];
+var C=null;
+function vCocina(){
+ if(!C){var r=REC[Math.floor(Math.random()*REC.length)];var s=r.s.slice(0,Math.min(4,S.lv.c+2));C={n:r.n,s:s,pool:shuffle(s),done:0,fails:0}}
+ var fin=C.done===C.s.length;
+ $('#main').innerHTML='<div class="card"><h1>'+C.n+'</h1><p>'+(fin?'¡Quedó listo!':'Toque los pasos en el orden en que se hacen.')+'</p>'+
+ C.s.slice(0,C.done).map(function(x,i){return '<div class="stepdone">'+(i+1)+'. '+x+'</div>'}).join('')+'</div>'+
+ (fin?'<div class="row"><button class="big go" id="otra" style="text-align:center">Otra receta</button><button class="big" id="fin" style="text-align:center">Terminar por hoy</button></div>':
+ C.pool.filter(function(x){return C.s.indexOf(x)>=C.done}).map(function(x){return '<button class="big" data-p="'+x+'">'+x+'</button>'}).join(''));
+ if(fin){say('¡Delicioso, '+name()+'! Ordenó todos los pasos. Una flor más para el pueblo.');
+  $('#otra').onclick=function(){C=null;vCocina()};$('#fin').onclick=function(){C=null;go('dia')};return}
+ document.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){
+  if(b.dataset.p===C.s[C.done]){C.done++;C.fails=0;if(C.done===C.s.length){adapt('c',true);day().games++;flower(2);save()}vCocina()}
+  else{C.fails++;if(C.fails===2){adapt('c',false);}say(C.fails>=2?'Casi. Una pista: el siguiente paso es “'+C.s[C.done]+'”.':'Casi. Probemos con otro paso.')}}});
+ if(C.done===0&&C.fails===0)say('Vamos a preparar algo rico. Toque los pasos en orden.');
+}
+
+/* Recuerdos: memoria autobiográfica */
+var PREG=['¿Cuál era el plato que más le gustaba de niño o niña y quién lo preparaba?','¿Cómo era la calle o el barrio donde creció?','¿Cuál fue su primer trabajo y qué recuerda de ese día?','¿Qué canción le hace acordar de una fiesta especial?','¿Cuál es un oficio o una receta que usted sabe y podría enseñarle a alguien?'];
+function vRec(){
+ var q=PREG[S.ri%PREG.length];
+ $('#main').innerHTML='<div class="card"><h1>Mis recuerdos</h1><p><b>'+q+'</b></p><textarea id="tx" rows="5" placeholder="Escriba aquí, o cuéntele a alguien y yo me quedo callada."></textarea><div class="row" style="margin-top:10px"><button class="big" id="otra" style="text-align:center">Otra pregunta</button><button class="big go" id="gu" style="text-align:center">Guardar</button></div></div>'+
+ (S.mem.length?'<div class="card"><h2>Mi álbum</h2>'+S.mem.slice(-3).reverse().map(function(m){return '<p>“'+m.t.replace(/</g,'&lt;')+'”<br><span class="small">'+m.d+'</span></p>'}).join('')+'</div>':'');
+ say('Cuénteme un recuerdo bonito. No hay respuestas buenas ni malas. También puede contárselo a alguien de la familia.');
+ $('#otra').onclick=function(){S.ri++;save();vRec()};
+ $('#gu').onclick=function(){var t=$('#tx').value.trim();if(!t){say('Si prefiere, cuénteselo en voz alta a alguien. Eso también cuenta.');return}S.mem.push({t:t,d:today()});flower(3);save();vRec();say('¡Qué lindo recuerdo, '+name()+'! Lo guardé en su álbum. ¿Se lo cuenta a alguien hoy?')};
+}
+
+/* Pueblo: evolución positiva */
+function vPueblo(){
+ var f=S.flowers,items=[];
+ var pool=['🌷','🏠','🌳','🌻','⛪','🐕','🏡','🌼','🚲','🌳','🏪','🌷','🐓','🌻','🌴','🏫'];
+ for(var i=0;i<Math.min(36,Math.floor(f/1)+3);i++)items.push(pool[i%pool.length]);
+ var dias=Math.max(1,Math.round((new Date(today())-new Date(S.start))/864e5)+1);
+ var nivel=['Vecino','Explorador','Guía','Maestro de Oficio'][Math.min(3,Math.floor((S.lv.m+S.lv.c)/2)-1)]||'Vecino';
+ $('#main').innerHTML='<div class="card"><h1>Mi pueblo</h1><div class="town" role="img" aria-label="Su pueblo con '+f+' flores">'+items.join('')+'</div><p style="margin-top:12px">Empezó el <b>'+S.start+'</b>. Lleva <b>'+dias+'</b> días en el pueblo y <b>'+f+'</b> flores sembradas.</p><p>Hoy usted es: <b>'+nivel+'</b>.</p></div>';
+ say('Mire cómo crece su pueblo, '+name()+'. Cada cosa que hace le da vida.');
+}
+
+/* Familia: vista de resumen amable */
+function resumen(){
+ var ks=Object.keys(S.days).sort().slice(-7),act=0,jue=0,mo={Bien:0,Regular:0,'Decaído':0};
+ ks.forEach(function(k){var d=S.days[k];if(d.checks.length||d.games)act++;jue+=d.games;if(d.mood)mo[d.mood]++});
+ var t=name()+' participó '+act+' de los últimos '+ks.length+' días registrados, completó '+jue+' juegos y guardó '+S.mem.length+' recuerdos. Ánimo: '+mo.Bien+' bien, '+mo.Regular+' regular, '+mo['Decaído']+' decaído.';
+ if(mo['Decaído']>=3)t+=' Sugerencia: llámele con cariño y, si el ánimo bajo continúa, comenten con su médico.';
+ return t;
+}
+function vFam(){
+ $('#main').innerHTML='<div class="card"><h1>Mi familia</h1><p><b>Resumen de la semana para quien me acompaña:</b></p><p id="res">'+resumen()+'</p><button class="big" id="cp" style="text-align:center">Copiar resumen para WhatsApp</button><p class="small">Esto no es un diagnóstico. Un juego no mide la memoria con exactitud: el sueño, el ánimo y el ruido cambian los resultados. Si usted o su familia notan cambios que se mantienen varias semanas, lo mejor es consultar con un profesional de la salud.</p></div>'+
+ '<div class="card"><h2>Mi persona de confianza</h2><label for="ph">Teléfono para el botón “Necesito ayuda”</label><input type="tel" id="ph" value="'+S.phone+'" placeholder="Ej. 3001234567"><button class="big go" id="sv" style="margin-top:10px;text-align:center">Guardar teléfono</button></div>'+
+ '<div class="card"><h2>Mis datos</h2><p>Todo se guarda solo en este celular.</p><button class="big" id="bor" style="text-align:center">Borrar todo y empezar de nuevo</button></div>';
+ say('Aquí está el resumen para su familia. Usted decide si lo comparte.');
+ $('#cp').onclick=function(){var t=resumen();try{navigator.clipboard.writeText(t).then(function(){say('Listo, copié el resumen.')},function(){say('No pude copiar. Puede leerlo en pantalla.')})}catch(e){say('No pude copiar. Puede leerlo en pantalla.')}};
+ $('#sv').onclick=function(){S.phone=$('#ph').value.replace(/[^0-9+]/g,'');save();say('Guardé el teléfono de su persona de confianza.')};
+ $('#bor').onclick=function(){if(confirm('¿Seguro que quiere borrar todo?')){try{localStorage.removeItem(KEY)}catch(e){}load();M=null;C=null;welcome()}};
+}
+
+/* Controles */
+$('#vozBtn').onclick=function(){S.vozOn=!S.vozOn;save();this.textContent='🔊 Voz: '+(S.vozOn?'sí':'no');this.setAttribute('aria-pressed',S.vozOn);if(!S.vozOn&&window.speechSynthesis)speechSynthesis.cancel()};
+$('#szBtn').onclick=function(){S.big=!S.big;save();size()};
+function size(){document.documentElement.style.setProperty('--fs',S.big?'26px':'21px');$('#szBtn').textContent=S.big?'🔎 Letra normal':'🔎 Letra más grande'}
+$('#helpBtn').onclick=function(){var b=S.phone?'<p>Llame a su persona de confianza:</p><a class="big" href="tel:'+S.phone+'">📞 Llamar ahora</a>':'<p>Todavía no hay un teléfono guardado. Pídale a alguien de su familia que lo guarde en “Mi familia”.</p>';
+ $('#dlgBody').innerHTML=b+'<p class="small">Si es una emergencia de salud, llame a la línea 123.</p>';$('#dlg').showModal();say('Tranquilo, '+name()+'. Aquí está el botón para llamar a alguien.')};
+$('#dlgClose').onclick=function(){$('#dlg').close()};
+
+load();size();$('#vozBtn').textContent='🔊 Voz: '+(S.vozOn?'sí':'no');
+if(!S.name)welcome();else{nav();view()}
+</script>
+</body>
+</html>
